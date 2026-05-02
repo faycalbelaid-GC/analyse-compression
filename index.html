@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse d'Essais de Compression V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob1"></div>
+        <div class="blob blob2"></div>
+    </div>
+
+    <div class="container glass">
+        <header>
+            <h1>Compression Lab</h1>
+            <p>Glissez vos fichiers CSV pour obtenir instantanément vos résultats mécaniques.</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-target="tab-analyze">Analyse</button>
+            <button class="tab-btn" data-target="tab-history">Historique</button>
+        </nav>
+
+        <main id="tab-analyze" class="tab-content active">
+            <div class="settings-panel">
+                <h3>Paramètres & Méta-données</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nom du projet</label>
+                        <input type="text" id="param-project" placeholder="Ex: Pont A">
+                    </div>
+                    <div class="form-group">
+                        <label>Opérateur</label>
+                        <input type="text" id="param-operator" placeholder="Ex: Jean Dupont">
+                    </div>
+                    <div class="form-group">
+                        <label>Plage Module Young (%)</label>
+                        <div class="range-inputs">
+                            <input type="number" id="param-estart" value="10" min="0" max="90"> à 
+                            <input type="number" id="param-eend" value="40" min="10" max="100">
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label><input type="checkbox" id="param-smoothing"> Appliquer un lissage (Savitzky-Golay)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="drop-zone" class="drop-zone">
+                <input type="file" id="file-input" accept=".csv" multiple hidden>
+                <div class="drop-content">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <h3>Glissez vos CSV ici (un ou plusieurs)</h3>
+                    <p>ou <span class="highlight">parcourez vos fichiers</span></p>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyse en cours...</p>
+            </div>
+
+            <div id="results" class="hidden">
+                <div id="single-result">
+                    <h2 id="result-title">Résultats</h2>
+                    <div class="cards-grid">
+                        <div class="result-card"><div class="card-label">Résistance (fc)</div><div class="card-value" id="res-fc">--</div><div class="card-unit">MPa</div></div>
+                        <div class="result-card"><div class="card-label">Module Young (E)</div><div class="card-value" id="res-e">--</div><div class="card-unit">MPa</div></div>
+                        <div class="result-card"><div class="card-label">Déformation (ε0)</div><div class="card-value" id="res-eps0">--</div></div>
+                        <div class="result-card"><div class="card-label">Déf. ultime (εu)</div><div class="card-value" id="res-epsu">--</div></div>
+                    </div>
+                    <div class="plot-container">
+                        <canvas id="interactive-chart"></canvas>
+                    </div>
+                    <div class="actions">
+                        <button id="download-pdf" class="btn primary">Télécharger le PDF</button>
+                        <button class="btn secondary reset-btn">Nouvelle Analyse</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="batch-results" class="hidden">
+                <h2>Analyse par lots terminée !</h2>
+                <p>Vos fichiers ont été traités avec succès.</p>
+                <div class="actions">
+                    <button id="download-zip" class="btn primary">Télécharger l'archive ZIP (Excel + PDFs)</button>
+                    <button class="btn secondary reset-btn">Nouvelle Analyse</button>
+                </div>
+            </div>
+
+            <div id="error-message" class="hidden error"></div>
+        </main>
+
+        <main id="tab-history" class="tab-content hidden">
+            <div class="history-container">
+                <button id="refresh-history" class="btn secondary" style="margin-bottom: 15px;">Rafraîchir</button>
+                <div class="table-responsive">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Fichier</th>
+                                <th>Projet</th>
+                                <th>fc (MPa)</th>
+                                <th>E (MPa)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rempli en JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
