@@ -15,8 +15,8 @@ def load_data(filepath):
             raise ValueError("Le fichier CSV doit contenir les colonnes 'Strain' et 'Stress'.")
         return df
     except Exception as e:
-        print(f"Erreur lors de la lecture du fichier : {e}")
-        sys.exit(1)
+        print(f"Erreur lors de la lecture du fichier {filepath} : {e}")
+        raise e
 
 def analyze_data(df):
     strains = df['Strain'].values
@@ -137,24 +137,75 @@ def generate_pdf(results, plot_image, output_pdf='rapport_essai.pdf'):
     doc.build(elements)
     print(f"Rapport généré avec succès : {output_pdf}")
 
+def process_file(csv_file, output_prefix=None):
+    if output_prefix is None:
+        output_prefix = os.path.splitext(os.path.basename(csv_file))[0]
+    
+    print(f"\n--- Traitement de {csv_file} ---")
+    try:
+        df = load_data(csv_file)
+        results = analyze_data(df)
+        
+        plot_img = f"{output_prefix}_plot.png"
+        pdf_out = f"{output_prefix}_rapport.pdf"
+        
+        plot_curve(df, results, plot_img)
+        generate_pdf(results, plot_img, pdf_out)
+        
+        results['Fichier'] = os.path.basename(csv_file)
+        return results
+    except Exception as e:
+        print(f"-> Ignoré suite à une erreur : {e}")
+        return None
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python compression_analysis.py <fichier.csv>")
+        print("Usage: python compression_analysis.py <fichier.csv ou dossier>")
         sys.exit(1)
 
-    csv_file = sys.argv[1]
-    
-    print(f"Lecture du fichier {csv_file}...")
-    df = load_data(csv_file)
-    
-    print("Analyse des données...")
-    results = analyze_data(df)
-    
-    print("Génération du graphique...")
-    plot_curve(df, results, 'plot.png')
-    
-    print("Génération du rapport PDF...")
-    generate_pdf(results, 'plot.png', 'rapport_essai.pdf')
+    path = sys.argv[1]
+    all_results = []
+
+    if os.path.isfile(path):
+        if not path.lower().endswith('.csv'):
+            print("Le fichier doit être un .csv")
+            sys.exit(1)
+        res = process_file(path)
+        if res:
+            all_results.append(res)
+            
+    elif os.path.isdir(path):
+        csv_files = [os.path.join(path, f) for f in os.listdir(path) if f.lower().endswith('.csv')]
+        if not csv_files:
+            print(f"Aucun fichier CSV trouvé dans le dossier {path}")
+            sys.exit(1)
+            
+        for f in csv_files:
+            res = process_file(f)
+            if res:
+                all_results.append(res)
+                
+        # Export Excel global
+        if all_results:
+            df_summary = pd.DataFrame(all_results)
+            cols = ['Fichier', 'fc', 'E', 'eps0', 'eps_u']
+            df_summary = df_summary[cols]
+            df_summary.rename(columns={
+                'fc': 'Résistance (MPa)',
+                'E': 'Module Young (MPa)',
+                'eps0': 'Déformation (fc)',
+                'eps_u': 'Déformation ultime'
+            }, inplace=True)
+            
+            excel_out = os.path.join(path, "synthese_essais.xlsx")
+            try:
+                df_summary.to_excel(excel_out, index=False)
+                print(f"\n=> Synthèse globale générée avec succès : {excel_out}")
+            except Exception as e:
+                print(f"\n=> Erreur lors de la génération Excel : {e}\n(Avez-vous installé openpyxl ? 'pip install openpyxl')")
+    else:
+        print("Chemin invalide.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
