@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse d'Essais de Compression</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob1"></div>
+        <div class="blob blob2"></div>
+    </div>
+
+    <div class="container glass">
+        <header>
+            <h1>Analyse de Compression</h1>
+            <p>Glissez votre fichier CSV pour obtenir instantanément vos résultats mécaniques.</p>
+        </header>
+
+        <main>
+            <div id="drop-zone" class="drop-zone">
+                <input type="file" id="file-input" accept=".csv" hidden>
+                <div class="drop-content">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <h3>Glissez-déposez votre CSV ici</h3>
+                    <p>ou <span class="highlight">parcourez vos fichiers</span></p>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyse en cours...</p>
+            </div>
+
+            <div id="results" class="hidden">
+                <h2>Résultats de l'essai</h2>
+                
+                <div class="cards-grid">
+                    <div class="result-card">
+                        <div class="card-label">Résistance (fc)</div>
+                        <div class="card-value" id="res-fc">--</div>
+                        <div class="card-unit">MPa</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="card-label">Module Young (E)</div>
+                        <div class="card-value" id="res-e">--</div>
+                        <div class="card-unit">MPa</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="card-label">Déformation (ε0)</div>
+                        <div class="card-value" id="res-eps0">--</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="card-label">Déf. ultime (εu)</div>
+                        <div class="card-value" id="res-epsu">--</div>
+                    </div>
+                </div>
+
+                <div class="plot-container">
+                    <img id="plot-img" src="" alt="Courbe Contrainte-Déformation">
+                </div>
+
+                <div class="actions">
+                    <button id="download-pdf" class="btn primary">Télécharger le Rapport PDF</button>
+                    <button id="reset-btn" class="btn secondary">Nouvelle Analyse</button>
+                </div>
+            </div>
+            <div id="error-message" class="hidden error"></div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
