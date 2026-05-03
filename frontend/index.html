@@ -3,104 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyse d'Essais de Compression V2</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Analyse d'Essais de Compression - Expert</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
-    <div class="background-blobs">
-        <div class="blob blob1"></div>
-        <div class="blob blob2"></div>
+
+    <!-- Ecran d'Authentification -->
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2 id="auth-title">Connexion</h2>
+            <form id="auth-form">
+                <input type="email" id="auth-email" placeholder="Email" required>
+                <input type="password" id="auth-password" placeholder="Mot de passe" required>
+                <button type="submit" class="btn primary" id="auth-submit">Se Connecter</button>
+            </form>
+            <div class="auth-toggle" id="auth-toggle-btn">Pas encore de compte ? S'inscrire</div>
+        </div>
     </div>
 
-    <div class="container glass">
-        <header>
-            <h1>Compression Lab</h1>
-            <p>Glissez vos fichiers CSV pour obtenir instantanément vos résultats mécaniques.</p>
-        </header>
+    <!-- Application Principale (Dashboard) -->
+    <div id="app-container" class="hidden">
+        
+        <!-- Menu Latéral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Compression<br>Expert</h2>
+            </div>
+            <ul class="nav-links">
+                <li data-target="view-dashboard" class="active">📊 Tableau de Bord</li>
+                <li data-target="view-projects">📁 Mes Projets</li>
+                <li data-target="view-analyze">⚙️ Nouvelle Analyse</li>
+                <li data-target="view-history">📜 Historique</li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="dark-mode-toggle" class="btn secondary">🌙 Mode Nuit</button>
+                <button id="logout-btn" class="btn secondary" style="color: var(--danger); border-color: var(--danger);">🚪 Déconnexion</button>
+            </div>
+        </aside>
 
-        <nav class="tabs">
-            <button class="tab-btn active" data-target="tab-analyze">Analyse</button>
-            <button class="tab-btn" data-target="tab-history">Historique</button>
-        </nav>
+        <!-- Contenu Principal -->
+        <main class="main-content">
+            
+            <!-- Vue : Dashboard -->
+            <section id="view-dashboard" class="view-section active">
+                <h1>Bienvenue, <span id="user-name">...</span></h1>
+                <p>Voici un aperçu de vos essais récents.</p>
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Derniers Essais (Statistiques)</h3>
+                    <canvas id="dashboard-chart" height="100"></canvas>
+                </div>
+            </section>
 
-        <main id="tab-analyze" class="tab-content active">
-            <div class="settings-panel">
-                <h3>Paramètres & Méta-données</h3>
-                <div class="form-grid">
+            <!-- Vue : Projets -->
+            <section id="view-projects" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Mes Projets</h1>
+                    <button id="new-project-btn" class="btn primary">+ Nouveau Projet</button>
+                </div>
+                
+                <div id="new-project-form" class="card hidden" style="margin-top: 20px;">
+                    <h3>Créer un Projet</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nom du projet</label>
+                            <input type="text" id="proj-name">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="proj-desc">
+                        </div>
+                    </div>
+                    <button id="submit-project" class="btn primary" style="margin-top: 15px;">Créer</button>
+                </div>
+
+                <div id="projects-list" style="margin-top: 20px; display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+                    <!-- Rempli par JS -->
+                </div>
+            </section>
+
+            <!-- Vue : Analyse -->
+            <section id="view-analyze" class="view-section">
+                <h1>Nouvelle Analyse</h1>
+                
+                <div class="card form-grid">
                     <div class="form-group">
-                        <label>Nom du projet</label>
-                        <input type="text" id="param-project" placeholder="Ex: Pont A">
+                        <label>Projet (Optionnel)</label>
+                        <select id="param-project"></select>
                     </div>
                     <div class="form-group">
                         <label>Opérateur</label>
                         <input type="text" id="param-operator" placeholder="Ex: Jean Dupont">
                     </div>
                     <div class="form-group">
-                        <label>Plage Module Young (%)</label>
-                        <div class="range-inputs">
-                            <input type="number" id="param-estart" value="10" min="0" max="90"> à 
-                            <input type="number" id="param-eend" value="40" min="10" max="100">
+                        <label>Âge de l'échantillon (Jours)</label>
+                        <input type="number" id="param-age" placeholder="Ex: 7, 14, 28" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Résistance Cible (fc cible en MPa)</label>
+                        <input type="number" id="param-target-fc" placeholder="Ex: 30" min="1">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Options de Lissage</label>
+                        <label style="display:flex; align-items:center; gap:10px; font-weight:normal;">
+                            <input type="checkbox" id="param-smoothing" style="width:auto;"> Appliquer un lissage (Savitzky-Golay)
+                        </label>
+                    </div>
+                </div>
+
+                <div id="drop-zone" class="drop-zone">
+                    <input type="file" id="file-input" accept=".csv" multiple class="hidden">
+                    <h3>Glissez vos fichiers CSV ici</h3>
+                    <p>ou cliquez pour parcourir</p>
+                </div>
+
+                <div id="loading" class="hidden" style="text-align: center; padding: 20px;">
+                    <p>Analyse en cours, veuillez patienter...</p>
+                </div>
+
+                <!-- Résultats -->
+                <div id="results" class="hidden" style="margin-top: 20px;">
+                    <h2>Résultats de l'analyse</h2>
+                    <div class="results-grid">
+                        <div class="res-box">
+                            <div>Résistance (fc)</div>
+                            <div class="res-val" id="res-fc">--</div>
+                            <div>MPa</div>
+                        </div>
+                        <div class="res-box">
+                            <div>Module Young (E)</div>
+                            <div class="res-val" id="res-e">--</div>
+                            <div>MPa</div>
+                        </div>
+                        <div class="res-box">
+                            <div>Ténacité</div>
+                            <div class="res-val" id="res-toughness">--</div>
+                            <div>MPa</div>
+                        </div>
+                        <div class="res-box">
+                            <div>Prédiction (28j)</div>
+                            <div class="res-val" id="res-pred">--</div>
+                            <div>MPa</div>
+                        </div>
+                        <div class="res-box">
+                            <div>Statut</div>
+                            <div class="res-val" id="res-status" style="font-size: 1.1rem; padding-top: 5px;">--</div>
                         </div>
                     </div>
-                    <div class="form-group checkbox-group">
-                        <label><input type="checkbox" id="param-smoothing"> Appliquer un lissage (Savitzky-Golay)</label>
+
+                    <div id="anomaly-alert" class="card hidden" style="background: rgba(239,68,68,0.1); border-color: var(--danger);">
+                        <strong style="color: var(--danger);">⚠️ Anomalie Détectée :</strong> Les résultats de cette courbe semblent anormaux. Veuillez vérifier les capteurs ou la rupture de l'échantillon.
                     </div>
-                </div>
-            </div>
 
-            <div id="drop-zone" class="drop-zone">
-                <input type="file" id="file-input" accept=".csv" multiple hidden>
-                <div class="drop-content">
-                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="2" fill="none">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                    </svg>
-                    <h3>Glissez vos CSV ici (un ou plusieurs)</h3>
-                    <p>ou <span class="highlight">parcourez vos fichiers</span></p>
-                </div>
-            </div>
-
-            <div id="loading" class="hidden">
-                <div class="spinner"></div>
-                <p>Analyse en cours...</p>
-            </div>
-
-            <div id="results" class="hidden">
-                <div id="single-result">
-                    <h2 id="result-title">Résultats</h2>
-                    <div class="cards-grid">
-                        <div class="result-card"><div class="card-label">Résistance (fc)</div><div class="card-value" id="res-fc">--</div><div class="card-unit">MPa</div></div>
-                        <div class="result-card"><div class="card-label">Module Young (E)</div><div class="card-value" id="res-e">--</div><div class="card-unit">MPa</div></div>
-                        <div class="result-card"><div class="card-label">Déformation (ε0)</div><div class="card-value" id="res-eps0">--</div></div>
-                        <div class="result-card"><div class="card-label">Déf. ultime (εu)</div><div class="card-value" id="res-epsu">--</div></div>
-                    </div>
-                    <div class="plot-container">
+                    <div class="card">
                         <canvas id="interactive-chart"></canvas>
                     </div>
-                    <div class="actions">
-                        <button id="download-pdf" class="btn primary">Télécharger le PDF</button>
-                        <button class="btn secondary reset-btn">Nouvelle Analyse</button>
+
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button id="download-pdf" class="btn primary">📥 Télécharger PDF</button>
+                        <button class="btn secondary" onclick="document.getElementById('results').classList.add('hidden')">Fermer</button>
                     </div>
                 </div>
-            </div>
 
-            <div id="batch-results" class="hidden">
-                <h2>Analyse par lots terminée !</h2>
-                <p>Vos fichiers ont été traités avec succès.</p>
-                <div class="actions">
-                    <button id="download-zip" class="btn primary">Télécharger l'archive ZIP (Excel + PDFs)</button>
-                    <button class="btn secondary reset-btn">Nouvelle Analyse</button>
+                <div id="batch-results" class="hidden card" style="margin-top: 20px; text-align: center;">
+                    <h2>Lot Traité avec Succès !</h2>
+                    <button id="download-zip" class="btn primary" style="margin-top: 15px;">📦 Télécharger ZIP (Synthèse + PDFs)</button>
                 </div>
-            </div>
 
-            <div id="error-message" class="hidden error"></div>
-        </main>
+            </section>
 
-        <main id="tab-history" class="tab-content hidden">
-            <div class="history-container">
-                <button id="refresh-history" class="btn secondary" style="margin-bottom: 15px;">Rafraîchir</button>
-                <div class="table-responsive">
+            <!-- Vue : Historique -->
+            <section id="view-history" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1>Historique des Essais</h1>
+                    <button id="refresh-history" class="btn secondary">Rafraîchir</button>
+                </div>
+                
+                <div class="card" style="padding: 0; overflow-x: auto;">
                     <table id="history-table">
                         <thead>
                             <tr>
@@ -109,6 +189,7 @@
                                 <th>Projet</th>
                                 <th>fc (MPa)</th>
                                 <th>E (MPa)</th>
+                                <th>Conformité</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,9 +197,11 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
+
         </main>
     </div>
-    <script src="script.js?v=2"></script>
+
+    <script src="script.js?v=3"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@ def load_data(file_bytes):
         raise ValueError("Le fichier CSV doit contenir les colonnes 'Strain' et 'Stress'.")
     return df
 
-def analyze_data(df, apply_smoothing=False, e_start_pct=10, e_end_pct=40):
+def analyze_data(df, apply_smoothing=False, e_start_pct=10, e_end_pct=40, age_days=None, target_fc=None):
     strains = df['Strain'].values
     stresses = df['Stress'].values
 
@@ -27,6 +27,8 @@ def analyze_data(df, apply_smoothing=False, e_start_pct=10, e_end_pct=40):
     fc = stresses[idx_max]
     eps0 = strains[idx_max]
     eps_u = strains[-1]
+
+    toughness = np.trapz(stresses, strains)
 
     stress_start = (e_start_pct / 100.0) * fc
     stress_end = (e_end_pct / 100.0) * fc
@@ -50,11 +52,33 @@ def analyze_data(df, apply_smoothing=False, e_start_pct=10, e_end_pct=40):
     m, c = np.linalg.lstsq(A, stress_range, rcond=None)[0]
     E = m
 
+    fc_28_pred = None
+    if age_days is not None and age_days > 0 and age_days != 28:
+        s = 0.25 # Coefficient Eurocode 2 pour ciment classe N
+        beta_cc = np.exp(s * (1 - np.sqrt(28 / age_days)))
+        fc_28_pred = fc / beta_cc
+
+    compliance_status = None
+    if target_fc is not None and target_fc > 0:
+        val_to_check = fc_28_pred if fc_28_pred is not None else fc
+        if val_to_check >= target_fc:
+            compliance_status = "Conforme"
+        else:
+            compliance_status = "Non-conforme"
+
+    anomaly_flag = False
+    if fc < 1.0 or E < 100 or eps0 > 0.05:
+        anomaly_flag = True
+
     return {
         'fc': float(fc),
         'eps0': float(eps0),
         'eps_u': float(eps_u),
         'E': float(E),
+        'toughness': float(toughness),
+        'fc_28_pred': float(fc_28_pred) if fc_28_pred else None,
+        'compliance_status': compliance_status,
+        'anomaly_flag': anomaly_flag,
         'idx_start': int(idx_start),
         'idx_end': int(idx_end),
         'm': float(m),
