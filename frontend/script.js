@@ -58,7 +58,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: formData
                 });
                 
-                if (!res.ok) throw new Error("Identifiants incorrects");
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Identifiants incorrects");
+                }
                 const data = await res.json();
                 currentToken = data.access_token;
                 localStorage.setItem("token", currentToken);
@@ -69,7 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 formData.append('password', password);
                 
                 const res = await fetch("/register", { method: "POST", body: formData });
-                if (!res.ok) throw new Error("Erreur d'inscription");
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error("Erreur d'inscription: " + (errData.detail || res.statusText));
+                }
                 alert("Inscription réussie. Vous pouvez vous connecter.");
                 isLogin = true;
                 document.getElementById("auth-toggle-btn").click();
